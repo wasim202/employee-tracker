@@ -5,6 +5,7 @@ const mysql = require("mysql2");
 const cTable = require("console.table");
 const util = require("util");
 const { response } = require("express");
+const { allowedNodeEnvironmentFlags } = require("process");
 
 const db = mysql.createConnection(
   {
@@ -29,7 +30,7 @@ const start = async () => {
         "view all roles",
         "view all employees",
         "add a department",
-        // "add a role",
+        "add a role",
         // "add an employee",
         // "update an employee role",
         // "quit",
@@ -42,7 +43,7 @@ const start = async () => {
     "view all roles": allRoles,
     "view all employees": allEmp,
     "add a department": addDepartment,
-    // "add a role",
+    "add a role": addRole,
     // "add an employee",
     // "update an employee role",
     // "quit",
@@ -120,7 +121,39 @@ const addDepartment = async () => {
         name: "name",
       },
     ]);
-    db.query(`INSERT INTO department (name) VALUES ?`, data.name);
+    db.query(`INSERT INTO department (name) VALUES (?)`, data.name);
+    console.log("Added", data.name, "to the database");
+    start();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const addRole = async () => {
+  try {
+    const data = await inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the name of the Role?",
+        name: "name",
+      },
+      {
+        type: "input",
+        message: "What is the salary of the Role?",
+        name: "salary",
+      },
+      {
+        type: "input",
+        message: "Which department does the role belong to?",
+        name: "depName",
+      },
+    ]);
+    db.query(
+      `INSERT INTO role (title, salary, department_id) VALUES (?)`,
+      data.name,
+      data.salary,
+      data.depName
+    );
     console.log("Added", data.name, "to the database");
     start();
   } catch (err) {
