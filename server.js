@@ -31,7 +31,7 @@ const start = async () => {
         "view all employees",
         "add a department",
         "add a role",
-        // "add an employee",
+        "add an employee",
         // "update an employee role",
         // "quit",
       ],
@@ -44,7 +44,7 @@ const start = async () => {
     "view all employees": allEmp,
     "add a department": addDepartment,
     "add a role": addRole,
-    // "add an employee",
+    "add an employee": addEmployee,
     // "update an employee role",
     // "quit",
   };
@@ -148,14 +148,91 @@ const addRole = async () => {
         name: "depName",
       },
     ]);
+    console.log(data);
     db.query(
-      `INSERT INTO role (title, salary, department_id) VALUES (?)`,
-      data.name,
-      data.salary,
-      data.depName
+      "SELECT id FROM department where name = ?",
+      data.depName,
+      function (err, record) {
+        console.log(record);
+        db.query(
+          `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`,
+          [data.name, data.salary, record[0].id],
+          function (err, result) {
+            console.log("Added", data.name, "to the database");
+            start();
+          }
+        );
+      }
     );
-    console.log("Added", data.name, "to the database");
-    start();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const addEmployee = async () => {
+  try {
+    const data = await inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the employee's first name?",
+        name: "fname",
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lname",
+      },
+      {
+        type: "list",
+        message: "What is the employee's role",
+        name: "empMenu",
+        choices: [
+          "Sales Lead",
+          "Sealsperson",
+          "Lead Engineer",
+          "Software Engineer",
+          "Account Manager",
+          "Accountant",
+          "Legal Team Lead",
+          "Lawyer",
+          "Customer Service",
+        ],
+      },
+      {
+        type: "list",
+        message: "What is the employee's manager",
+        name: "empManMenu",
+        choices: [
+          "None",
+          "John Doe",
+          "Mike Chan",
+          "Ashley Rodriguez",
+          "Kevin Tupik",
+          "Kunal Singh",
+          "Malia Brown",
+        ],
+      },
+    ]);
+    db.query(
+      `SELECT e.first_name, e.last_name FROM employee e LEFT JOIN employee m WHERE m.id = ?`,
+      data.empManMenu,
+      function (err, record) {
+        console.log(record);
+        db.query(
+          `INERST INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
+          [
+            data.fname,
+            data.lname,
+            data.empMenu,
+            record.first_name,
+            record.last_name,
+          ],
+          function (err, result) {
+            console.log("Added", data.fname, data.lname, "to the database");
+          }
+        );
+      }
+    );
   } catch (err) {
     console.log(err);
   }
