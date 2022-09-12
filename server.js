@@ -153,7 +153,7 @@ const addRole = async () => {
       "SELECT id FROM department where name = ?",
       data.depName,
       function (err, record) {
-        console.log(record);
+        //console.log(record);
         db.query(
           `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`,
           [data.name, data.salary, record[0].id],
@@ -214,21 +214,16 @@ const addEmployee = async () => {
       },
     ]);
     db.query(
-      `SELECT e.first_name, e.last_name FROM employee e LEFT JOIN employee m WHERE m.id = ?`,
+      `SELECT e.id FROM employee e LEFT JOIN employee m WHERE m.id = e.manager_id and m.first_name = ?`,
       data.empManMenu,
       function (err, record) {
         console.log(record);
         db.query(
           `INERST INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
-          [
-            data.fname,
-            data.lname,
-            data.empMenu,
-            record.first_name,
-            record.last_name,
-          ],
+          [data.fname, data.lname, data.empMenu, record.id],
           function (err, result) {
             console.log("Added", data.fname, data.lname, "to the database");
+            start();
           }
         );
       }
