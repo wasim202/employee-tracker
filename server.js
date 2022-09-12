@@ -32,8 +32,8 @@ const start = async () => {
         "add a department",
         "add a role",
         "add an employee",
-        // "update an employee role",
-        // "quit",
+        "update an employee role",
+        "Quit",
       ],
     },
   ]);
@@ -45,36 +45,12 @@ const start = async () => {
     "add a department": addDepartment,
     "add a role": addRole,
     "add an employee": addEmployee,
-    // "update an employee role",
-    // "quit",
+    "update an employee role": updateRole,
+    quit: quit,
   };
   await choices[Response.mainMenu]();
-
-  // switch (Response.mainMenu) {
-  //   case "view all departments":
-  //     // db.query("SELECT * FROM department", function (err, Response) {
-  //     //   console.log(Response);
-  //     // });
-  //     allDep();
-  //     break;
-  //   case "view all rolls":
-  //     db.query("SELECT * FROM role", function (err, Response) {
-  //       console.log(Response);
-  //     });
-  //     break;
-  //   case "view all employees":
-  //     db.query("SELECT * FROM employee", function (err, Response) {
-  //       console.log(Response);
-  //     });
-  //     break;
-  // }
 };
 
-// function allDep() {
-//   query("SELECT * FROM department").then((Response) => {
-//     console.table(Response);
-//   });
-// }
 const allDep = async () => {
   try {
     //console.log("all departments");
@@ -171,101 +147,83 @@ const addRole = async () => {
 
 const addEmployee = async () => {
   try {
-    const data = await inquirer
-      .prompt([
-        {
-          type: "input",
-          message: "What is the employee's first name?",
-          name: "fname",
-        },
-        {
-          type: "input",
-          message: "What is the employee's last name?",
-          name: "lname",
-        },
-        // {
-        //   type: "list",
-        //   message: "What is the employee's role",
-        //   name: "empMenu",
-        //   choices: [
-        //     "Sales Lead",
-        //     "Sealsperson",
-        //     "Lead Engineer",
-        //     "Software Engineer",
-        //     "Account Manager",
-        //     "Accountant",
-        //     "Legal Team Lead",
-        //     "Lawyer",
-        //     "Customer Service",
-        //   ],
-        // },
-        // {
-        //   type: "list",
-        //   message: "What is the employee's manager",
-        //   name: "empManMenu",
-        //   choices: [
-        //     "None",
-        //     "John Doe",
-        //     "Mike Chan",
-        //     "Ashley Rodriguez",
-        //     "Kevin Tupik",
-        //     "Kunal Singh",
-        //     "Malia Brown",
-        //   ],
-        // },
-      ])
-      .then((res) => {
-        console.log(res);
-        let firstName = res.fname;
-        let lastName = res.lname;
-
-        db.query(
-          "SELECT role.id, role.title, department.name AS department, role.salary FROM role JOIN department ON department.id = role.department_id"
-        ).then(([rows]) => {
-          let rows = rows;
-          const rChoices = rows.map(({ id, title }) => ({
-            name: title,
-            value: id,
-          }));
-        });
-
-        inquirer
-          .prompt({
-            type: "list",
-            message: "What is the employee's role",
-            name: "empMenu",
-            choices: rChoices,
-          })
-          .then((res) => {
-            console.log(res);
-            let roleId = res.role_id;
-          });
-
-        db.query(
-          "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;"
-        ).then((res) => {
-          let roleId = res.role_id;
-        });
-      });
-
-    db.query(
-      `SELECT e.id FROM employee e LEFT JOIN employee m WHERE m.id = e.manager_id and m.first_name = ?`,
-      data.empManMenu,
-      function (err, record) {
-        console.log(record);
-        db.query(
-          `INERST INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
-          [data.fname, data.lname, data.empMenu, record.id],
-          function (err, result) {
-            console.log("Added", data.fname, data.lname, "to the database");
-            start();
-          }
-        );
-      }
+    const roles = await query("SELECT id AS value, title AS name FROM role");
+    const managers = await query(
+      "SELECT id As value, concat(first_name, ' ' ,last_name) As name FROM employee WHERE manager_id is NULL"
     );
+    //console.log(roles);
+    //console.log(managers);
+    const data = await inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the employee's first name?",
+        name: "fname",
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lname",
+      },
+      {
+        type: "list",
+        message: "What is the employee's role",
+        name: "empMenu",
+        choices: roles,
+      },
+      {
+        type: "list",
+        message: "What is the employee's manager",
+        name: "empManMenu",
+        choices: managers,
+      },
+    ]);
+    console.log(data);
+    await query(
+      `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
+      [data.fname, data.lname, data.empMenu, data.empMenu]
+    );
+    console.log("Added", data.fname, data.lname, "to the database");
+    await start();
   } catch (err) {
     console.log(err);
   }
 };
 
+const updateRole = async () => {
+  try {
+    const employees = await query(
+      'SELECT id As value, CONCAT (first_name, " " ,last_name) AS name FROM employee'
+    );
+    const roleName = await query("SELECT id As value, title As name FROM role");
+    //console.log(employees);
+    //console.log(roleName);
+    const data = await inquirer.prompt([
+      {
+        type: "list",
+        message: "Which employee role do you want to update?",
+        name: "empName",
+        choices: employees,
+      },
+      {
+        type: "list",
+        message: "Which role do you want to assign to the selected employee?",
+        name: "roleName",
+        choices: roleName,
+      },
+    ]);
+    console.log(data.empName);
+    await query(`UPDATE employee SET role_id = ? WHERE employee.id = ?`, [
+      data.roleName,
+      data.empName,
+    ]);
+    console.log("Updated employee's role");
+    await start();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+function quit() {
+  process.exit();
+}
 start();
