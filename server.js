@@ -171,48 +171,83 @@ const addRole = async () => {
 
 const addEmployee = async () => {
   try {
-    const data = await inquirer.prompt([
-      {
-        type: "input",
-        message: "What is the employee's first name?",
-        name: "fname",
-      },
-      {
-        type: "input",
-        message: "What is the employee's last name?",
-        name: "lname",
-      },
-      {
-        type: "list",
-        message: "What is the employee's role",
-        name: "empMenu",
-        choices: [
-          "Sales Lead",
-          "Sealsperson",
-          "Lead Engineer",
-          "Software Engineer",
-          "Account Manager",
-          "Accountant",
-          "Legal Team Lead",
-          "Lawyer",
-          "Customer Service",
-        ],
-      },
-      {
-        type: "list",
-        message: "What is the employee's manager",
-        name: "empManMenu",
-        choices: [
-          "None",
-          "John Doe",
-          "Mike Chan",
-          "Ashley Rodriguez",
-          "Kevin Tupik",
-          "Kunal Singh",
-          "Malia Brown",
-        ],
-      },
-    ]);
+    const data = await inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "What is the employee's first name?",
+          name: "fname",
+        },
+        {
+          type: "input",
+          message: "What is the employee's last name?",
+          name: "lname",
+        },
+        // {
+        //   type: "list",
+        //   message: "What is the employee's role",
+        //   name: "empMenu",
+        //   choices: [
+        //     "Sales Lead",
+        //     "Sealsperson",
+        //     "Lead Engineer",
+        //     "Software Engineer",
+        //     "Account Manager",
+        //     "Accountant",
+        //     "Legal Team Lead",
+        //     "Lawyer",
+        //     "Customer Service",
+        //   ],
+        // },
+        // {
+        //   type: "list",
+        //   message: "What is the employee's manager",
+        //   name: "empManMenu",
+        //   choices: [
+        //     "None",
+        //     "John Doe",
+        //     "Mike Chan",
+        //     "Ashley Rodriguez",
+        //     "Kevin Tupik",
+        //     "Kunal Singh",
+        //     "Malia Brown",
+        //   ],
+        // },
+      ])
+      .then((res) => {
+        console.log(res);
+        let firstName = res.fname;
+        let lastName = res.lname;
+
+        db.query(
+          "SELECT role.id, role.title, department.name AS department, role.salary FROM role JOIN department ON department.id = role.department_id"
+        ).then(([rows]) => {
+          let rows = rows;
+          const rChoices = rows.map(({ id, title }) => ({
+            name: title,
+            value: id,
+          }));
+        });
+
+        inquirer
+          .prompt({
+            type: "list",
+            message: "What is the employee's role",
+            name: "empMenu",
+            choices: rChoices,
+          })
+          .then((res) => {
+            console.log(res);
+            let roleId = res.role_id;
+          });
+
+        db.query(
+          "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;"
+        ).then((res) => {
+          let roleId = res.role_id;
+        });
+      });
+
     db.query(
       `SELECT e.id FROM employee e LEFT JOIN employee m WHERE m.id = e.manager_id and m.first_name = ?`,
       data.empManMenu,
