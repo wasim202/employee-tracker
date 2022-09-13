@@ -124,7 +124,7 @@ const addRole = async () => {
         name: "depName",
       },
     ]);
-    console.log(data);
+    //console.log(data);
     db.query(
       "SELECT id FROM department where name = ?",
       data.depName,
@@ -177,7 +177,7 @@ const addEmployee = async () => {
         choices: managers,
       },
     ]);
-    console.log(data);
+    //console.log(data);
     await query(
       `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
       [data.fname, data.lname, data.empMenu, data.empMenu]
@@ -211,7 +211,7 @@ const updateRole = async () => {
         choices: roleName,
       },
     ]);
-    console.log(data.empName);
+    //console.log(data.empName);
     await query(`UPDATE employee SET role_id = ? WHERE employee.id = ?`, [
       data.roleName,
       data.empName,
@@ -223,7 +223,7 @@ const updateRole = async () => {
   }
 };
 
-function quit() {
+const quit = async () => {
   process.exit();
-}
+};
 start();
