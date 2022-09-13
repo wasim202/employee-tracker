@@ -33,7 +33,7 @@ const start = async () => {
         "add a role",
         "add an employee",
         "update an employee role",
-        "Quit",
+        "quit",
       ],
     },
   ]);
@@ -46,7 +46,7 @@ const start = async () => {
     "add a role": addRole,
     "add an employee": addEmployee,
     "update an employee role": updateRole,
-    quit: quit,
+    "quit": quit,
   };
   await choices[Response.mainMenu]();
 };
